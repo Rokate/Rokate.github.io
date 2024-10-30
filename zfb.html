@@ -11,60 +11,78 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
             background-color: #f0f2f5;
         }
 
         .slider-container {
             width: 100%;
-            max-width: 390px;
+            height: 100vh;
             position: relative;
             overflow: hidden;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .slider {
             display: flex;
             transition: transform 0.3s ease-in-out;
-            width: 100%;
+            height: 100%;
         }
 
         .slide {
             flex: 0 0 100%;
             width: 100%;
+            height: 100%;
         }
 
         .slide img {
             width: 100%;
-            height: auto;
+            height: 100%;
+            object-fit: contain;
             display: block;
         }
 
         .nav-dots {
-            position: absolute;
+            position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             gap: 8px;
+            z-index: 100;
         }
 
         .dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.5);
+            background-color: rgba(0, 0, 0, 0.3);
             cursor: pointer;
         }
 
         .dot.active {
-            background-color: white;
+            background-color: #1677ff;
+        }
+
+        @media (orientation: landscape) {
+            .slider-container {
+                height: 100vh;
+                max-height: 100vh;
+            }
+        }
+
+        @media (orientation: portrait) {
+            .slider-container {
+                height: 100vh;
+            }
         }
     </style>
 </head>
@@ -72,13 +90,13 @@
     <div class="slider-container">
         <div class="slider">
             <div class="slide">
-                <img src="/img/zfb1.jpg" alt="支付宝首页">
+                <img src="/img/zfb1.jpg" alt="支付宝首页" draggable="false">
             </div>
             <div class="slide">
-                <img src="/img/zfb3.jpg" alt="支付宝余额页">
+                <img src="/img/zfb3.jpg" alt="支付宝余额页" draggable="false">
             </div>
             <div class="slide">
-                <img src="/img/zfb2.jpg" alt="支付宝我的页">
+                <img src="/img/zfb2.jpg" alt="支付宝我的页" draggable="false">
             </div>
         </div>
         <div class="nav-dots">
@@ -95,24 +113,49 @@
         let currentSlide = 0;
         let startX = 0;
         let currentX = 0;
+        let isDragging = false;
 
         // 触摸事件处理
-        slider.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            slider.style.transition = 'none';
-        });
+        slider.addEventListener('touchstart', handleStart);
+        slider.addEventListener('touchmove', handleMove);
+        slider.addEventListener('touchend', handleEnd);
 
-        slider.addEventListener('touchmove', (e) => {
-            currentX = e.touches[0].clientX;
+        // 鼠标事件处理
+        slider.addEventListener('mousedown', handleStart);
+        slider.addEventListener('mousemove', handleMove);
+        slider.addEventListener('mouseup', handleEnd);
+        slider.addEventListener('mouseleave', handleEnd);
+
+        function handleStart(e) {
+            isDragging = true;
+            startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            slider.style.transition = 'none';
+        }
+
+        function handleMove(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            currentX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
             const diff = currentX - startX;
             const translate = -currentSlide * 100 + (diff / slider.offsetWidth) * 100;
-            slider.style.transform = `translateX(${translate}%)`;
-        });
+            
+            // 添加拖动限制
+            if (
+                (currentSlide === 0 && diff > 0) || 
+                (currentSlide === slides.length - 1 && diff < 0)
+            ) {
+                slider.style.transform = `translateX(${translate / 3}%)`; // 减少拖动效果
+            } else {
+                slider.style.transform = `translateX(${translate}%)`;
+            }
+        }
 
-        slider.addEventListener('touchend', (e) => {
+        function handleEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
             slider.style.transition = 'transform 0.3s ease-in-out';
             const diff = currentX - startX;
-            const threshold = slider.offsetWidth / 3;
+            const threshold = slider.offsetWidth / 4;
 
             if (Math.abs(diff) > threshold) {
                 if (diff > 0 && currentSlide > 0) {
@@ -123,9 +166,8 @@
             }
 
             updateSlider();
-        });
+        }
 
-        // 更新滑块位置和导航点
         function updateSlider() {
             slider.style.transform = `translateX(-${currentSlide * 100}%)`;
             dots.forEach((dot, index) => {
@@ -139,6 +181,16 @@
                 currentSlide = index;
                 updateSlider();
             });
+        });
+
+        // 窗口大小改变时调整布局
+        window.addEventListener('resize', () => {
+            updateSlider();
+        });
+
+        // 禁用默认的拖动行为
+        document.addEventListener('dragstart', (e) => {
+            e.preventDefault();
         });
     </script>
 </body>
