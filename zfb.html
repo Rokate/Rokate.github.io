@@ -1,51 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付宝</title>
     <style>
-        .slider-container {
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-            position: relative;
-            overflow: hidden;
-            touch-action: pan-y pinch-zoom;
-        }
-        
-        .slider {
-            display: flex;
-            transition: transform 0.3s ease-out;
-        }
-        
-        .slide {
-            min-width: 100%;
+        * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
-        
-        img {
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+        }
+
+        .slider-container {
+            width: 100%;
+            max-width: 390px;
+            position: relative;
+            overflow: hidden;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .slider {
+            display: flex;
+            transition: transform 0.3s ease-in-out;
+            width: 100%;
+        }
+
+        .slide {
+            flex: 0 0 100%;
+            width: 100%;
+        }
+
+        .slide img {
             width: 100%;
             height: auto;
             display: block;
         }
-        
+
         .nav-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            justify-content: center;
-            margin-top: 10px;
             gap: 8px;
         }
-        
+
         .dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #ccc;
+            background-color: rgba(255, 255, 255, 0.5);
             cursor: pointer;
         }
-        
+
         .dot.active {
-            background: #2196F3;
+            background-color: white;
         }
     </style>
 </head>
@@ -53,13 +72,13 @@
     <div class="slider-container">
         <div class="slider">
             <div class="slide">
-                <img src="/img/zfb1.jpg" alt="Mobile App Screenshot 1">
+                <img src="/img/zfb1.jpg" alt="支付宝首页">
             </div>
             <div class="slide">
-                <img src="/img/zfb3.jpg" alt="Mobile App Screenshot 2">
+                <img src="/img/zfb3.jpg" alt="支付宝余额页">
             </div>
             <div class="slide">
-                <img src="/img/zfb2.jpg" alt="Mobile App Screenshot 3">
+                <img src="/img/zfb2.jpg" alt="支付宝我的页">
             </div>
         </div>
         <div class="nav-dots">
@@ -73,95 +92,51 @@
         const slider = document.querySelector('.slider');
         const slides = document.querySelectorAll('.slide');
         const dots = document.querySelectorAll('.dot');
-        let currentIndex = 0;
+        let currentSlide = 0;
         let startX = 0;
         let currentX = 0;
-        let isDragging = false;
 
-        // Touch events
+        // 触摸事件处理
         slider.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;
-            isDragging = true;
             slider.style.transition = 'none';
         });
 
         slider.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
             currentX = e.touches[0].clientX;
             const diff = currentX - startX;
-            const translate = -currentIndex * 100 + (diff / slider.offsetWidth) * 100;
+            const translate = -currentSlide * 100 + (diff / slider.offsetWidth) * 100;
             slider.style.transform = `translateX(${translate}%)`;
         });
 
         slider.addEventListener('touchend', (e) => {
-            isDragging = false;
-            slider.style.transition = 'transform 0.3s ease-out';
+            slider.style.transition = 'transform 0.3s ease-in-out';
             const diff = currentX - startX;
             const threshold = slider.offsetWidth / 3;
 
             if (Math.abs(diff) > threshold) {
-                if (diff > 0 && currentIndex > 0) {
-                    currentIndex--;
-                } else if (diff < 0 && currentIndex < slides.length - 1) {
-                    currentIndex++;
+                if (diff > 0 && currentSlide > 0) {
+                    currentSlide--;
+                } else if (diff < 0 && currentSlide < slides.length - 1) {
+                    currentSlide++;
                 }
             }
-            
+
             updateSlider();
         });
 
-        // Mouse events
-        slider.addEventListener('mousedown', (e) => {
-            startX = e.clientX;
-            isDragging = true;
-            slider.style.transition = 'none';
-        });
-
-        slider.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            currentX = e.clientX;
-            const diff = currentX - startX;
-            const translate = -currentIndex * 100 + (diff / slider.offsetWidth) * 100;
-            slider.style.transform = `translateX(${translate}%)`;
-        });
-
-        slider.addEventListener('mouseup', (e) => {
-            isDragging = false;
-            slider.style.transition = 'transform 0.3s ease-out';
-            const diff = currentX - startX;
-            const threshold = slider.offsetWidth / 3;
-
-            if (Math.abs(diff) > threshold) {
-                if (diff > 0 && currentIndex > 0) {
-                    currentIndex--;
-                } else if (diff < 0 && currentIndex < slides.length - 1) {
-                    currentIndex++;
-                }
-            }
-            
-            updateSlider();
-        });
-
-        slider.addEventListener('mouseleave', () => {
-            if (isDragging) {
-                isDragging = false;
-                slider.style.transition = 'transform 0.3s ease-out';
-                updateSlider();
-            }
-        });
-
-        // Update slider position and dots
+        // 更新滑块位置和导航点
         function updateSlider() {
-            slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+            slider.style.transform = `translateX(-${currentSlide * 100}%)`;
             dots.forEach((dot, index) => {
-                dot.classList.toggle('active', index === currentIndex);
+                dot.classList.toggle('active', index === currentSlide);
             });
         }
 
-        // Dot navigation
+        // 点击导航点切换图片
         dots.forEach((dot, index) => {
             dot.addEventListener('click', () => {
-                currentIndex = index;
+                currentSlide = index;
                 updateSlider();
             });
         });
