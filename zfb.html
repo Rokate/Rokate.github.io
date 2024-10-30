@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .slider-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+            touch-action: pan-y pinch-zoom;
+        }
+        
+        .slider {
+            display: flex;
+            transition: transform 0.3s ease-out;
+        }
+        
+        .slide {
+            min-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .nav-dots {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            gap: 8px;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+            cursor: pointer;
+        }
+        
+        .dot.active {
+            background: #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="slider-container">
+        <div class="slider">
+            <div class="slide">
+                <img src="/api/placeholder/400/800" alt="Mobile App Screenshot 1">
+            </div>
+            <div class="slide">
+                <img src="/api/placeholder/400/800" alt="Mobile App Screenshot 2">
+            </div>
+            <div class="slide">
+                <img src="/api/placeholder/400/800" alt="Mobile App Screenshot 3">
+            </div>
+        </div>
+        <div class="nav-dots">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+
+    <script>
+        const slider = document.querySelector('.slider');
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.dot');
+        let currentIndex = 0;
+        let startX = 0;
+        let currentX = 0;
+        let isDragging = false;
+
+        // Touch events
+        slider.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+            slider.style.transition = 'none';
+        });
+
+        slider.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            currentX = e.touches[0].clientX;
+            const diff = currentX - startX;
+            const translate = -currentIndex * 100 + (diff / slider.offsetWidth) * 100;
+            slider.style.transform = `translateX(${translate}%)`;
+        });
+
+        slider.addEventListener('touchend', (e) => {
+            isDragging = false;
+            slider.style.transition = 'transform 0.3s ease-out';
+            const diff = currentX - startX;
+            const threshold = slider.offsetWidth / 3;
+
+            if (Math.abs(diff) > threshold) {
+                if (diff > 0 && currentIndex > 0) {
+                    currentIndex--;
+                } else if (diff < 0 && currentIndex < slides.length - 1) {
+                    currentIndex++;
+                }
+            }
+            
+            updateSlider();
+        });
+
+        // Mouse events
+        slider.addEventListener('mousedown', (e) => {
+            startX = e.clientX;
+            isDragging = true;
+            slider.style.transition = 'none';
+        });
+
+        slider.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            currentX = e.clientX;
+            const diff = currentX - startX;
+            const translate = -currentIndex * 100 + (diff / slider.offsetWidth) * 100;
+            slider.style.transform = `translateX(${translate}%)`;
+        });
+
+        slider.addEventListener('mouseup', (e) => {
+            isDragging = false;
+            slider.style.transition = 'transform 0.3s ease-out';
+            const diff = currentX - startX;
+            const threshold = slider.offsetWidth / 3;
+
+            if (Math.abs(diff) > threshold) {
+                if (diff > 0 && currentIndex > 0) {
+                    currentIndex--;
+                } else if (diff < 0 && currentIndex < slides.length - 1) {
+                    currentIndex++;
+                }
+            }
+            
+            updateSlider();
+        });
+
+        slider.addEventListener('mouseleave', () => {
+            if (isDragging) {
+                isDragging = false;
+                slider.style.transition = 'transform 0.3s ease-out';
+                updateSlider();
+            }
+        });
+
+        // Update slider position and dots
+        function updateSlider() {
+            slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentIndex);
+            });
+        }
+
+        // Dot navigation
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                currentIndex = index;
+                updateSlider();
+            });
+        });
+    </script>
+</body>
+</html>
